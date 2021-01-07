@@ -42,14 +42,16 @@ class Event:
                             continue
                         attendees.append(
                             attendee._make([
-                                " ".join([a["profile"]["first_name"], a["profile"]["last_name"]]),
+                                " ".join([a["profile"]["first_name"],
+                                          a["profile"]["last_name"]]),
                                 email,
                             ]
-                        ))
+                            ))
                     except KeyError:
                         # Just for debugging purposes
                         # Eventbrite supports registration without emails
-                        print([a["profile"]["first_name"], a["profile"]["last_name"]])
+                        print([a["profile"]["first_name"],
+                               a["profile"]["last_name"]])
                 if data["pagination"]["has_more_items"]:
                     continuation = data["pagination"]["continuation"]
                 else:
@@ -59,7 +61,8 @@ class Event:
         return attendees
 
     def write_file(self, output, only_eficode=False):
-        attendees = self.get_attendees(only_eficode=only_eficode, token=self.token)
+        attendees = self.get_attendees(
+            only_eficode=only_eficode, token=self.token)
         with open(output, mode="a+") as f:
             for participant in attendees:
                 f.write(";".join([
@@ -74,9 +77,9 @@ class Event:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", type=int, default=2020)
-    parser.add_argument("--organization", type=str, required=True)
+    parser.add_argument("--organization", type=str, default=37414873530)
     parser.add_argument("--token", type=str, required=True)
-    parser.add_argument("--output", type=str, required=True)
+    parser.add_argument("--output", type=str, default="output.csv")
     parser.add_argument("--only-internal", type=bool, default=False)
 
     args = parser.parse_args()
@@ -98,13 +101,15 @@ def main():
         if fetch_more:
             continuation = data["pagination"]["continuation"]
         for event in data["events"]:
-            d = datetime.datetime.strptime(event["start"]["local"], "%Y-%m-%dT%H:%M:%S")
+            d = datetime.datetime.strptime(
+                event["start"]["local"], "%Y-%m-%dT%H:%M:%S")
             if d.year >= args.year:
                 events.append(Event(event=event, token=args.token))
     with open(args.output, mode="a+") as f:
         f.write("event name;start date;end date;name;email\n")
     for e in events:
         e.write_file(args.output, only_eficode=internal)
+    print("export done")
 
 
 if __name__ == '__main__':
